@@ -58,11 +58,9 @@ func fromCtyValue(val cty.Value, target reflect.Value, path cty.Path) error {
 
 	// Lists and maps can be nil without indirection, but everything else
 	// requires a pointer and we set it immediately to nil.
-	// We also make an exception for capsule types because we want to handle
-	// pointers specially for these.
 	// (fromCtyList and fromCtyMap must therefore deal with val.IsNull, while
 	// other types can assume no nulls after this point.)
-	if val.IsNull() && !val.Type().IsListType() && !val.Type().IsMapType() && !val.Type().IsCapsuleType() {
+	if val.IsNull() && !val.Type().IsListType() && !val.Type().IsMapType() {
 		target = fromCtyPopulatePtr(target, true)
 		if target.Kind() != reflect.Ptr {
 			return path.NewErrorf("null value is not allowed")
@@ -567,13 +565,8 @@ func fromCtyCapsule(val cty.Value, target reflect.Value, path cty.Path) error {
 
 		return nil
 	} else {
-		if val.IsNull() {
-			return path.NewErrorf("null value is not allowed")
-		}
-
 		// If our target isn't a pointer then we will attempt to copy
 		// the encapsulated value into it.
-
 		eType := val.Type().EncapsulatedType()
 
 		if !eType.AssignableTo(target.Type()) {
@@ -584,9 +577,13 @@ func fromCtyCapsule(val cty.Value, target reflect.Value, path cty.Path) error {
 			return path.NewErrorf("incorrect type %s", val.Type().FriendlyName())
 		}
 
-		// We know that EncapsulatedValue is always a pointer, so we
-		// can safely call .Elem on its reflect.Value.
-		target.Set(reflect.ValueOf(val.EncapsulatedValue()).Elem())
+		if !val.IsNull() {
+			// We know that EncapsulatedValue is always a pointer, so we
+			// can safely call .Elem on its reflect.Value.
+			target.Set(reflect.ValueOf(val.EncapsulatedValue()).Elem())
+		} else {
+			panic("????")
+		}
 
 		return nil
 	}

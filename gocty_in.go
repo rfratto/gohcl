@@ -1,6 +1,7 @@
 package gohcl
 
 import (
+	"fmt"
 	"math/big"
 	"reflect"
 
@@ -484,6 +485,7 @@ func toCtyCapsule(val reflect.Value, capsuleType cty.Type, path cty.Path) (cty.V
 	}
 
 	if !val.Type().Elem().AssignableTo(capsuleType.EncapsulatedType()) {
+		fmt.Println("OUR TYPE", val.Type().Elem(), "CAPSULE TYPE", capsuleType.EncapsulatedType())
 		return cty.NilVal, path.NewErrorf("value of type %T not compatible with capsule %#v", val.Interface(), capsuleType)
 	}
 

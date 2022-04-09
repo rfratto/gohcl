@@ -7,3 +7,4 @@ through a registration system.
 It makes the following changes:
 
 * nil slices will return an empty go-cty list or go-cty set instead of null.
+* It is valid for capsule values to be nil.
