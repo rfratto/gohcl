@@ -1,4 +1,4 @@
-module github.com/rfratto/gohcl-capsule
+module github.com/rfratto/gohcl
 
 go 1.17
 
