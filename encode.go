@@ -97,8 +97,6 @@ func populateBody(rv reflect.Value, ty reflect.Type, tags *fieldTags, dst *hclwr
 		return nameIdxs[ni] < nameIdxs[nj]
 	})
 
-	dst.Clear()
-
 	prevWasBlock := false
 	for _, name := range namesOrder {
 		fieldIdx := nameIdxs[name]

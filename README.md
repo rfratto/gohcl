@@ -12,3 +12,5 @@ It makes the following changes:
 * It is valid for capsule values to be nil.
 * `hcl` struct tags are used globally instead of a combination of `hcl` and
   `cty` tags.
+* Encoding a value into a HCL body will no longer clear the existing contents
+  of the body.
