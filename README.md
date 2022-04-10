@@ -14,3 +14,6 @@ It makes the following changes:
   `cty` tags.
 * Encoding a value into a HCL body will no longer clear the existing contents
   of the body.
+* Capsule types can be encoded as HCL attributes through the use of capsule
+  extension operations; allowing a capsule type to return raw HCL tokens which
+  represent the capsule value.

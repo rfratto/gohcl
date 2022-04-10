@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
+	"github.com/zclconf/go-cty/cty"
 )
 
 // EncodeIntoBody replaces the contents of the given hclwrite Body with
@@ -97,7 +98,11 @@ func populateBody(rv reflect.Value, ty reflect.Type, tags *fieldTags, dst *hclwr
 		return nameIdxs[ni] < nameIdxs[nj]
 	})
 
-	prevWasBlock := false
+	var (
+		firstAppend  = true
+		prevWasBlock = false
+	)
+
 	for _, name := range namesOrder {
 		fieldIdx := nameIdxs[name]
 		field := ty.Field(fieldIdx)
@@ -114,30 +119,41 @@ func populateBody(rv reflect.Value, ty reflect.Type, tags *fieldTags, dst *hclwr
 			if exprType.AssignableTo(fieldTy) || attrType.AssignableTo(fieldTy) {
 				continue // ignore undecoded fields
 			}
-			if !fieldVal.IsValid() {
-				continue // ignore (field value is nil pointer)
-			}
-			if fieldTy.Kind() == reflect.Ptr && fieldVal.IsNil() {
-				continue // ignore
-			}
 			if prevWasBlock {
 				dst.AppendNewline()
 				prevWasBlock = false
 			}
 
-			valTy, err := ImpliedType(fieldVal.Interface())
-			if err != nil {
-				panic(fmt.Sprintf("cannot encode %T as HCL expression: %s", fieldVal.Interface(), err))
-			}
+			if !fieldVal.IsValid() {
+				// null value
+				dst.SetAttributeValue(name, cty.NullVal(cty.DynamicPseudoType))
+			} else if fieldTy.Kind() == reflect.Ptr && fieldVal.IsNil() {
+				// null value
+				dst.SetAttributeValue(name, cty.NullVal(cty.DynamicPseudoType))
+			} else {
+				valTy, err := ImpliedType(fieldVal.Interface())
+				if err != nil {
+					panic(fmt.Sprintf("cannot encode %T as HCL expression: %s", fieldVal.Interface(), err))
+				}
 
-			val, err := ToCtyValue(fieldVal.Interface(), valTy)
-			if err != nil {
-				// This should never happen, since we should always be able
-				// to decode into the implied type.
-				panic(fmt.Sprintf("failed to encode %T as %#v: %s", fieldVal.Interface(), valTy, err))
-			}
+				if valTy.IsCapsuleType() {
+					fieldVal = fieldVal.Addr()
+				}
+				val, err := ToCtyValue(fieldVal.Interface(), valTy)
+				if err != nil {
+					// This should never happen, since we should always be able
+					// to decode into the implied type.
+					panic(fmt.Sprintf("failed to encode %T as %#v: %s", fieldVal.Interface(), valTy, err))
+				}
 
-			dst.SetAttributeValue(name, val)
+				if valTy.IsCapsuleType() {
+					f := valTy.CapsuleOps().ExtensionData(CapsuleTokenExtensionKey).(CapsuleTokenExtension)
+					dst.SetAttributeRaw(name, f(val))
+					continue
+				}
+
+				dst.SetAttributeValue(name, val)
+			}
 
 		} else { // must be a block, then
 			elemTy := fieldTy
@@ -164,7 +180,10 @@ func populateBody(rv reflect.Value, ty reflect.Type, tags *fieldTags, dst *hclwr
 					}
 					block := EncodeAsBlock(elemVal.Interface(), name)
 					if !prevWasBlock {
-						dst.AppendNewline()
+						if !firstAppend {
+							// Separate attributes and blocks only if we're already appended something
+							dst.AppendNewline()
+						}
 						prevWasBlock = true
 					}
 					dst.AppendBlock(block)
@@ -178,11 +197,16 @@ func populateBody(rv reflect.Value, ty reflect.Type, tags *fieldTags, dst *hclwr
 				}
 				block := EncodeAsBlock(fieldVal.Interface(), name)
 				if !prevWasBlock {
-					dst.AppendNewline()
+					if !firstAppend {
+						// Separate attributes and blocks only if we're already appended something
+						dst.AppendNewline()
+					}
 					prevWasBlock = true
 				}
 				dst.AppendBlock(block)
 			}
 		}
+
+		firstAppend = false
 	}
 }
