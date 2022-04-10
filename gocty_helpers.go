@@ -28,15 +28,19 @@ var stringType = reflect.TypeOf("")
 // This function will panic if two fields within the struct are tagged with
 // the same cty attribute name.
 func structTagIndices(st reflect.Type) map[string]int {
-	ct := st.NumField()
-	ret := make(map[string]int, ct)
+	var (
+		ft = getFieldTags(st)
 
-	for i := 0; i < ct; i++ {
-		field := st.Field(i)
-		attrName := field.Tag.Get("cty")
-		if attrName != "" {
-			ret[attrName] = i
-		}
+		ret = make(map[string]int, st.NumField())
+	)
+
+	// We only look through attributes and blocks: labels, body, and remain don't
+	// map to a cty concept (and optionals fill the attributes set).
+	for name, index := range ft.Attributes {
+		ret[name] = index
+	}
+	for name, index := range ft.Blocks {
+		ret[name] = index
 	}
 
 	return ret

@@ -405,8 +405,8 @@ func testOutWrongResult(ctyValue cty.Value, targetType reflect.Type, got interfa
 }
 
 type testStruct struct {
-	Name   string `cty:"name"`
-	Number *int   `cty:"number"`
+	Name   string `hcl:"name"`
+	Number *int   `hcl:"number"`
 }
 
 type testTupleStruct struct {

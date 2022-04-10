@@ -10,3 +10,5 @@ It makes the following changes:
 * Capsule types can be used through a registration system.
 * nil slices will return an empty go-cty list or go-cty set instead of null.
 * It is valid for capsule values to be nil.
+* `hcl` struct tags are used globally instead of a combination of `hcl` and
+  `cty` tags.

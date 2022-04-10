@@ -293,8 +293,8 @@ func TestIn(t *testing.T) {
 		},
 		{
 			GoValue: struct {
-				Name   string `cty:"name"`
-				Number int    `cty:"number"`
+				Name   string `hcl:"name,attr"`
+				Number int    `hcl:"number,attr"`
 			}{"Steven", 1},
 			Type: cty.Object(map[string]cty.Type{
 				"name":   cty.String,
@@ -307,7 +307,7 @@ func TestIn(t *testing.T) {
 		},
 		{
 			GoValue: struct {
-				Name   string `cty:"name"`
+				Name   string `hcl:"name"`
 				Number int
 			}{"Steven", 1},
 			Type: cty.Object(map[string]cty.Type{
