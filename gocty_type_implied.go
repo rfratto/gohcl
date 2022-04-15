@@ -24,6 +24,11 @@ func impliedType(rt reflect.Type, path cty.Path) (cty.Type, error) {
 		return cty, nil
 	}
 
+	// Special types
+	if rt == durationType {
+		return cty.String, nil
+	}
+
 	switch rt.Kind() {
 
 	case reflect.Ptr:

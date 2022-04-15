@@ -3,6 +3,7 @@ package gohcl
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/zclconf/go-cty/cty"
 )
@@ -67,6 +68,10 @@ func TestImpliedType(t *testing.T) {
 		},
 		{
 			"",
+			cty.String,
+		},
+		{
+			45 * time.Second,
 			cty.String,
 		},
 

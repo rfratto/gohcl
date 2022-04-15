@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/set"
@@ -65,6 +66,11 @@ func TestIn(t *testing.T) {
 			GoValue: (*bool)(nil), // any nil is convertable to a null of any type
 			Type:    cty.String,
 			Want:    cty.NullVal(cty.String),
+		},
+		{
+			GoValue: 45 * time.Second,
+			Type:    cty.String,
+			Want:    cty.StringVal("45s"),
 		},
 
 		// Number

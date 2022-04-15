@@ -17,3 +17,4 @@ It makes the following changes:
 * Capsule types can be encoded as HCL attributes through the use of capsule
   extension operations; allowing a capsule type to return raw HCL tokens which
   represent the capsule value.
+* Supports Go types like time.Duration

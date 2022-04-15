@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/zclconf/go-cty/cty"
 )
@@ -81,6 +82,11 @@ func TestOut(t *testing.T) {
 			CtyValue:   cty.StringVal("hello"),
 			TargetType: reflect.TypeOf((*stringAlias)(nil)).Elem(),
 			Want:       stringAlias("hello"),
+		},
+		{
+			CtyValue:   cty.StringVal("60s"),
+			TargetType: reflect.TypeOf(time.Duration(0)),
+			Want:       60 * time.Second,
 		},
 
 		// Number

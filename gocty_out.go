@@ -4,8 +4,13 @@ import (
 	"math"
 	"math/big"
 	"reflect"
+	"time"
 
 	"github.com/zclconf/go-cty/cty"
+)
+
+var (
+	durationType = reflect.TypeOf(time.Duration(0))
 )
 
 // FromCtyValue assigns a cty.Value to a reflect.Value, which must be a pointer,
@@ -238,6 +243,15 @@ func fromCtyNumberBig(bf *big.Float, target reflect.Value, path cty.Path) error 
 }
 
 func fromCtyString(val cty.Value, target reflect.Value, path cty.Path) error {
+	if target.Type() == durationType {
+		d, err := time.ParseDuration(val.AsString())
+		if err != nil {
+			return err
+		}
+		target.SetInt(int64(d))
+		return nil
+	}
+
 	switch target.Kind() {
 	case reflect.String:
 		target.SetString(val.AsString())

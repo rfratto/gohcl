@@ -3,6 +3,7 @@ package gohcl
 import (
 	"math/big"
 	"reflect"
+	"time"
 
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
@@ -125,6 +126,10 @@ func toCtyNumber(val reflect.Value, path cty.Path) (cty.Value, error) {
 func toCtyString(val reflect.Value, path cty.Path) (cty.Value, error) {
 	if val = toCtyUnwrapPointer(val); !val.IsValid() {
 		return cty.NullVal(cty.String), nil
+	}
+
+	if val.Type() == durationType {
+		return cty.StringVal(val.Interface().(time.Duration).String()), nil
 	}
 
 	switch val.Kind() {
