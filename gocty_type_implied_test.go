@@ -74,6 +74,10 @@ func TestImpliedType(t *testing.T) {
 			45 * time.Second,
 			cty.String,
 		},
+		{
+			time.Date(2022, time.April, 15, 12, 0, 0, 0, time.UTC),
+			cty.String,
+		},
 
 		// Collection types
 		{

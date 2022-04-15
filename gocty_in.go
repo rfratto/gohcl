@@ -1,6 +1,7 @@
 package gohcl
 
 import (
+	"encoding"
 	"math/big"
 	"reflect"
 	"time"
@@ -130,6 +131,12 @@ func toCtyString(val reflect.Value, path cty.Path) (cty.Value, error) {
 
 	if val.Type() == durationType {
 		return cty.StringVal(val.Interface().(time.Duration).String()), nil
+	} else if tm, ok := val.Interface().(encoding.TextMarshaler); ok {
+		bb, err := tm.MarshalText()
+		if err != nil {
+			return cty.NilVal, err
+		}
+		return cty.StringVal(string(bb)), nil
 	}
 
 	switch val.Kind() {

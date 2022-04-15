@@ -1,6 +1,7 @@
 package gohcl
 
 import (
+	"encoding"
 	"math"
 	"math/big"
 	"reflect"
@@ -243,13 +244,21 @@ func fromCtyNumberBig(bf *big.Float, target reflect.Value, path cty.Path) error 
 }
 
 func fromCtyString(val cty.Value, target reflect.Value, path cty.Path) error {
-	if target.Type() == durationType {
+	// Special types
+	switch {
+	case target.Type() == durationType:
+
 		d, err := time.ParseDuration(val.AsString())
 		if err != nil {
 			return err
 		}
 		target.SetInt(int64(d))
 		return nil
+	case target.CanAddr():
+		iface := target.Addr().Interface()
+		if tu, ok := iface.(encoding.TextUnmarshaler); ok {
+			return tu.UnmarshalText([]byte(val.AsString()))
+		}
 	}
 
 	switch target.Kind() {
@@ -259,7 +268,6 @@ func fromCtyString(val cty.Value, target reflect.Value, path cty.Path) error {
 
 	default:
 		return likelyRequiredTypesError(path, target)
-
 	}
 }
 

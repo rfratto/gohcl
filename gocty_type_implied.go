@@ -1,10 +1,13 @@
 package gohcl
 
 import (
+	"encoding"
 	"reflect"
 
 	"github.com/zclconf/go-cty/cty"
 )
+
+var textMarshalerType = reflect.TypeOf((*encoding.TextMarshaler)(nil)).Elem()
 
 // ImpliedType takes an arbitrary Go value (as an interface{}) and attempts
 // to find a suitable cty.Type instance that could be used for a conversion
@@ -25,7 +28,10 @@ func impliedType(rt reflect.Type, path cty.Path) (cty.Type, error) {
 	}
 
 	// Special types
-	if rt == durationType {
+	switch {
+	case rt == durationType:
+		return cty.String, nil
+	case rt.Implements(textMarshalerType):
 		return cty.String, nil
 	}
 

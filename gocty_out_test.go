@@ -88,6 +88,11 @@ func TestOut(t *testing.T) {
 			TargetType: reflect.TypeOf(time.Duration(0)),
 			Want:       60 * time.Second,
 		},
+		{
+			CtyValue:   cty.StringVal("2022-04-15T12:00:00Z"),
+			TargetType: reflect.TypeOf(time.Time{}),
+			Want:       time.Date(2022, time.April, 15, 12, 0, 0, 0, time.UTC),
+		},
 
 		// Number
 		{
