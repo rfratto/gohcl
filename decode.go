@@ -1,6 +1,7 @@
 package gohcl
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 
@@ -10,11 +11,20 @@ import (
 	"github.com/zclconf/go-cty/cty/convert"
 )
 
+// Decoder is the interface implemented by types that can deocde themselves
+// from an *hcl.Block.
+type Decoder interface {
+	DecodeHCL(body hcl.Body, ctx *hcl.EvalContext) error
+}
+
 // DecodeBody extracts the configuration within the given body into the given
-// value. This value must be a non-nil pointer to either a struct or
-// a map, where in the former case the configuration will be decoded using
-// struct tags and in the latter case only attributes are allowed and their
-// values are decoded into the map.
+// value. This value must be a non-nil pointer to either a struct or a map,
+// where in the former case the configuration will be decoded using struct tags
+// and in the latter case only attributes are allowed and their values are
+// decoded into the map.
+//
+// To decode a Block into a value implementing the Decoder interface,
+// DecodeBody calls that value's DecodeHCL method.
 //
 // The given EvalContext is used to resolve any variables or functions in
 // expressions encountered while decoding. This may be nil to require only
@@ -23,8 +33,8 @@ import (
 //
 // The returned diagnostics should be inspected with its HasErrors method to
 // determine if the populated value is valid and complete. If error diagnostics
-// are returned then the given value may have been partially-populated but
-// may still be accessed by a careful caller for static analysis and editor
+// are returned then the given value may have been partially-populated but may
+// still be accessed by a careful caller for static analysis and editor
 // integration use-cases.
 func DecodeBody(body hcl.Body, ctx *hcl.EvalContext, val interface{}) hcl.Diagnostics {
 	rv := reflect.ValueOf(val)
@@ -36,6 +46,23 @@ func DecodeBody(body hcl.Body, ctx *hcl.EvalContext, val interface{}) hcl.Diagno
 }
 
 func decodeBodyToValue(body hcl.Body, ctx *hcl.EvalContext, val reflect.Value) hcl.Diagnostics {
+	if val.CanAddr() {
+		iface := val.Addr().Interface()
+		if dec, ok := iface.(Decoder); ok {
+			var diags hcl.Diagnostics
+			err := dec.DecodeHCL(body, ctx)
+			if !errors.As(err, &diags) {
+				diags = append(diags, &hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "Error decoding",
+					Detail:   fmt.Sprintf("Decoding error: %s", err),
+				})
+			}
+
+			return diags
+		}
+	}
+
 	et := val.Type()
 	switch et.Kind() {
 	case reflect.Struct:
@@ -277,6 +304,7 @@ func decodeBlockToValue(block *hcl.Block, ctx *hcl.EvalContext, v reflect.Value)
 
 		if len(block.Labels) > 0 {
 			blockTags := getFieldTags(ty)
+
 			for li, lv := range block.Labels {
 				lfieldIdx := blockTags.Labels[li].FieldIndex
 				v.Field(lfieldIdx).Set(reflect.ValueOf(lv))

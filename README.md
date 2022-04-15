@@ -18,3 +18,4 @@ It makes the following changes:
   extension operations; allowing a capsule type to return raw HCL tokens which
   represent the capsule value.
 * Special handling for time.Duration and binary.TextMarshaler/binary.TextUnmarshaler
+* Support for an interface which exposes a `DecodeHCL` method

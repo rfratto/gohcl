@@ -131,6 +131,10 @@ func populateBody(rv reflect.Value, ty reflect.Type, tags *fieldTags, dst *hclwr
 				// null value
 				dst.SetAttributeValue(name, cty.NullVal(cty.DynamicPseudoType))
 			} else {
+				if opt := tags.Optional[name]; opt && fieldVal.IsZero() {
+					continue
+				}
+
 				valTy, err := ImpliedType(fieldVal.Interface())
 				if err != nil {
 					panic(fmt.Sprintf("cannot encode %T as HCL expression: %s", fieldVal.Interface(), err))
