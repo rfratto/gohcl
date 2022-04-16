@@ -368,11 +368,16 @@ func toCtyObject(val reflect.Value, attrTypes map[string]cty.Type, path cty.Path
 		path = append(path, cty.PathStep(nil))
 
 		attrFields := structTagIndices(val.Type())
+		optFields := optionalFields(val.Type())
 
 		vals := make(map[string]cty.Value, len(attrTypes))
 		for k, at := range attrTypes {
 			path[len(path)-1] = cty.GetAttrStep{
 				Name: k,
+			}
+
+			if optFields[k] && val.IsZero() {
+				continue
 			}
 
 			if fieldIdx, have := attrFields[k]; have {

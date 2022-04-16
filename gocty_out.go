@@ -472,13 +472,14 @@ func fromCtyObject(val cty.Value, target reflect.Value, path cty.Path) error {
 
 		attrTypes := val.Type().AttributeTypes()
 		targetFields := structTagIndices(target.Type())
+		optFields := optionalFields(target.Type())
 
 		path = append(path, nil)
 
 		for k, i := range targetFields {
-			if _, exists := attrTypes[k]; !exists {
-				// If the field in question isn't able to represent nil,
-				// that's an error.
+			if _, exists := attrTypes[k]; !exists && !optFields[k] {
+				// If the field in question isn't able to represent nil and isn't
+				// optional, that's an error.
 				fk := target.Field(i).Kind()
 				switch fk {
 				case reflect.Ptr, reflect.Slice, reflect.Map, reflect.Interface:
@@ -496,6 +497,10 @@ func fromCtyObject(val cty.Value, target reflect.Value, path cty.Path) error {
 
 			fieldIdx, exists := targetFields[k]
 			if !exists {
+				if optFields[k] {
+					// Field is optional; continue on
+					continue
+				}
 				return path.NewErrorf("unsupported attribute %q", k)
 			}
 

@@ -45,3 +45,23 @@ func structTagIndices(st reflect.Type) map[string]int {
 
 	return ret
 }
+
+// optionalFields returns optional fields from st.
+func optionalFields(st reflect.Type) map[string]bool {
+	var (
+		ft = getFieldTags(st)
+
+		ret = make(map[string]bool, st.NumField())
+	)
+
+	// We only look through attributes and blocks: labels, body, and remain don't
+	// map to a cty concept (and optionals fill the attributes set).
+	for name := range ft.Attributes {
+		ret[name] = ft.Optional[name]
+	}
+	for name := range ft.Blocks {
+		ret[name] = ft.Optional[name]
+	}
+
+	return ret
+}
