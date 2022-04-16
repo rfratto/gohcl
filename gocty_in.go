@@ -376,17 +376,20 @@ func toCtyObject(val reflect.Value, attrTypes map[string]cty.Type, path cty.Path
 				Name: k,
 			}
 
-			if optFields[k] && val.IsZero() {
-				continue
-			}
-
 			if fieldIdx, have := attrFields[k]; have {
+				if optFields[k] && val.Field(fieldIdx).IsZero() {
+					continue
+				}
+
 				var err error
 				vals[k], err = toCtyValue(val.Field(fieldIdx), at, path)
 				if err != nil {
 					return cty.NilVal, err
 				}
 			} else {
+				if optFields[k] {
+					continue
+				}
 				vals[k] = cty.NullVal(at)
 			}
 		}
