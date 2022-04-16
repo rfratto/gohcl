@@ -1,7 +1,6 @@
 package hclfmt
 
 import (
-	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -34,10 +33,6 @@ func Format(toks hclwrite.Tokens) {
 	// Formatting must change only whitespace. Specifically, that means
 	// changing the SpacesBefore attribute on a token while leaving the
 	// other token attributes unchanged.
-
-	for _, tok := range toks {
-		spew.Dump(tok)
-	}
 
 	lines := linesForFormat(toks)
 	formatIndent(lines)
