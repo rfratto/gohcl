@@ -1,5 +1,7 @@
 # gohcl
 
+> **NOTE**: `gohcl` is a work in progress and may have many bugs, user beware.
+
 `gohcl` is a fork of github.com/hashicorp/hcl/v2/gohcl and
 github.com/zclconf/go-cty/cty/gocty which includes improvements over the
 existing package at the expense of making backwards-incompatible changes to the
