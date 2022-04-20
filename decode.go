@@ -51,7 +51,7 @@ func decodeBodyToValue(body hcl.Body, ctx *hcl.EvalContext, val reflect.Value) h
 		if dec, ok := iface.(Decoder); ok {
 			var diags hcl.Diagnostics
 			err := dec.DecodeHCL(body, ctx)
-			if !errors.As(err, &diags) {
+			if err != nil && !errors.As(err, &diags) {
 				diags = append(diags, &hcl.Diagnostic{
 					Severity: hcl.DiagError,
 					Summary:  "Error decoding",
