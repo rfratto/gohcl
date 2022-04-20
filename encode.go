@@ -141,6 +141,9 @@ func populateBody(rv reflect.Value, ty reflect.Type, tags *fieldTags, dst *hclwr
 				}
 
 				if valTy.IsCapsuleType() {
+					if !fieldVal.CanAddr() {
+						panic(fmt.Sprintf("source value of type %T must be addressible", fieldVal.Interface()))
+					}
 					fieldVal = fieldVal.Addr()
 				}
 				val, err := ToCtyValue(fieldVal.Interface(), valTy)
@@ -198,6 +201,12 @@ func populateBody(rv reflect.Value, ty reflect.Type, tags *fieldTags, dst *hclwr
 				}
 				if elemTy.Kind() == reflect.Ptr && fieldVal.IsNil() {
 					continue // ignore
+				}
+
+				// Retrieve the address of fieldVal in case we need to reference any of
+				// the inner fields.
+				if fieldVal.CanAddr() {
+					fieldVal = fieldVal.Addr()
 				}
 				block := EncodeAsBlock(fieldVal.Interface(), name)
 				if !prevWasBlock {
