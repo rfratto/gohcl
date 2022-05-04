@@ -52,6 +52,10 @@ func FromCtyValue(val cty.Value, target interface{}) error {
 func fromCtyValue(val cty.Value, target reflect.Value, path cty.Path) error {
 	ty := val.Type()
 
+	if ty.IsCapsuleType() {
+		return fromCtyCapsule(val, target, path)
+	}
+
 	deepTarget := fromCtyPopulatePtr(target, false)
 
 	// If we're decoding into a cty.Value then we just pass through the
@@ -563,12 +567,11 @@ func fromCtyTuple(val cty.Value, target reflect.Value, path cty.Path) error {
 }
 
 func fromCtyCapsule(val cty.Value, target reflect.Value, path cty.Path) error {
+	// Walk through indirection until we get to the last pointer,
+	// which we might set to null below.
+	target = fromCtyPopulatePtr(target, true)
 
 	if target.Kind() == reflect.Ptr {
-		// Walk through indirection until we get to the last pointer,
-		// which we might set to null below.
-		target = fromCtyPopulatePtr(target, true)
-
 		if val.IsNull() {
 			target.Set(reflect.Zero(target.Type()))
 			return nil
@@ -577,10 +580,9 @@ func fromCtyCapsule(val cty.Value, target reflect.Value, path cty.Path) error {
 		// Since a capsule contains a pointer to an object, we'll preserve
 		// that pointer on the way out and thus allow the caller to recover
 		// the original object, rather than a copy of it.
-
 		eType := val.Type().EncapsulatedType()
 
-		if !eType.AssignableTo(target.Elem().Type()) {
+		if !reflect.PtrTo(eType).AssignableTo(target.Type()) {
 			// Our interface contract promises that we won't expose Go
 			// implementation details in error messages, so we need to keep
 			// this vague. This can only arise if a calling application has
@@ -608,13 +610,10 @@ func fromCtyCapsule(val cty.Value, target reflect.Value, path cty.Path) error {
 			// We know that EncapsulatedValue is always a pointer, so we
 			// can safely call .Elem on its reflect.Value.
 			target.Set(reflect.ValueOf(val.EncapsulatedValue()).Elem())
-		} else {
-			panic("????")
 		}
 
 		return nil
 	}
-
 }
 
 // fromCtyPopulatePtr recognizes when target is a pointer type and allocates

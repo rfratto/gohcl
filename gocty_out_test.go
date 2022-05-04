@@ -325,7 +325,7 @@ func TestOut(t *testing.T) {
 		{
 			CtyValue:   cty.CapsuleVal(capsuleType1, capsuleANative),
 			TargetType: reflect.PtrTo(reflect.TypeOf(capsuleType1Native{})),
-			Want:       capsuleANative, // should recover original pointer
+			Want:       testOutAssertEqual(capsuleANative),
 		},
 
 		// Passthrough
@@ -396,6 +396,25 @@ func testOutAssertPtrVal(want interface{}) testOutAssertFunc {
 			t.Fatalf("wrong type %s; want pointer to %T", gotVal.Type(), want)
 		}
 		gotVal = gotVal.Elem()
+
+		want := wantVal.Interface()
+		got := gotVal.Interface()
+		if got != want {
+			testOutWrongResult(
+				ctyValue,
+				targetType,
+				got,
+				want,
+				t,
+			)
+		}
+	}
+}
+
+func testOutAssertEqual(want interface{}) testOutAssertFunc {
+	return func(ctyValue cty.Value, targetType reflect.Type, rawGot interface{}, t *testing.T) {
+		wantVal := reflect.ValueOf(want)
+		gotVal := reflect.ValueOf(rawGot)
 
 		want := wantVal.Interface()
 		got := gotVal.Interface()

@@ -491,10 +491,6 @@ func toCtyTuple(val reflect.Value, elemTypes []cty.Type, path cty.Path) (cty.Val
 }
 
 func toCtyCapsule(val reflect.Value, capsuleType cty.Type, path cty.Path) (cty.Value, error) {
-	if val = toCtyUnwrapPointer(val); !val.IsValid() {
-		return cty.NullVal(capsuleType), nil
-	}
-
 	if val.Kind() != reflect.Ptr {
 		if !val.CanAddr() {
 			return cty.NilVal, path.NewErrorf("source value for capsule %#v must be addressable", capsuleType)
